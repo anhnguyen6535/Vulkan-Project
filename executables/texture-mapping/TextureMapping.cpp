@@ -201,7 +201,7 @@ private:
 
 	void CreateGpuTexture()
 	{
-		auto const path = Path::Instance->Get("models/Flag_of_Canada.png");
+		auto const path = Path::Instance->Get("models/chess_bishop/bishop.colour.white.png");
 		MFA_ASSERT(std::filesystem::exists(path));
 		auto const cpuTexture = Importer::UncompressedImage(path);
 
