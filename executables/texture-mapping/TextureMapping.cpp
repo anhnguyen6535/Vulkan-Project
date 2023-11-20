@@ -205,23 +205,9 @@ private:
 		MFA_ASSERT(std::filesystem::exists(path));
 		auto const cpuTexture = Importer::UncompressedImage(path);
 
-		/*int width = 512;
-		int height = 512;
-		int components = 4;
-		auto const blob = Memory::AllocSize(width * height * components);
-		auto* ptr = blob->As<uint8_t>();
-		for (int i = 0; i < width * height * components; ++i)
-		{
-			ptr[i] = Math::Random(0, 256);
-		}
-
-		auto cpuTexture = Importer::InMemoryTexture(
-			*blob, 
-			width, 
-			height, 
-			Asset::Texture::Format::UNCOMPRESSED_UNORM_R8G8B8A8_LINEAR,
-			components
-		);*/
+		auto const aoPath = Path::Instance->Get("models/chess_bishop/bishop.ao.png");
+		MFA_ASSERT(std::filesystem::exists(aoPath));
+		auto const aoCpuTexture = Importer::UncompressedImage(aoPath);
 
 		auto const* device = LogicalDevice::Instance;
 		auto const commandBuffer = RB::BeginSingleTimeCommand(
@@ -236,7 +222,15 @@ private:
 			commandBuffer
 		);
 
+		auto [aoTexture, aoStagingBuffer] = RB::CreateTexture(
+			*aoCpuTexture,
+			LogicalDevice::Instance->GetVkDevice(),
+			LogicalDevice::Instance->GetPhysicalDevice(),
+			commandBuffer
+		);
+
 		_texture = texture;
+		_aoTexture = aoTexture;
 
 		RB::EndAndSubmitSingleTimeCommand(
 			device->GetVkDevice(),
@@ -295,7 +289,7 @@ private:
 
 	void CreateDescriptorSet()
 	{
-		_perGeometryDescriptorSet = _pipeline->CreatePerGeometryDescriptorSetGroup(*_material->buffers[0], *_texture);
+		_perGeometryDescriptorSet = _pipeline->CreatePerGeometryDescriptorSetGroup(*_material->buffers[0], *_texture, *_aoTexture);
 	}
 
 	std::shared_ptr<PointRenderer> _pointRenderer{};
@@ -312,6 +306,7 @@ private:
 	std::shared_ptr<RT::BufferAndMemory> _vertexBuffer{};
 
 	std::shared_ptr<RT::GpuTexture> _texture{};
+	std::shared_ptr<RT::GpuTexture> _aoTexture{};
 	std::shared_ptr<RT::BufferGroup> _material{};
 	
 	RT::DescriptorSetGroup _perGeometryDescriptorSet;

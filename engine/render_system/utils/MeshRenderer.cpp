@@ -284,6 +284,7 @@ namespace MFA
 				_descriptorSets.emplace_back(
 					_pipeline->CreatePerGeometryDescriptorSetGroup(
 						*_materials[nextMaterialIdx]->buffers[0],
+						*gpuTexture,
 						*gpuTexture
 					)
 				);

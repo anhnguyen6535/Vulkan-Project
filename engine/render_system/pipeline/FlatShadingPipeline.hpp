@@ -69,7 +69,8 @@ namespace MFA
         [[nodiscard]]
         RT::DescriptorSetGroup CreatePerGeometryDescriptorSetGroup(
             RT::BufferAndMemory const& material,
-            RT::GpuTexture const& texture
+            RT::GpuTexture const& texture,
+            RT::GpuTexture const& aoTexture
         ) const;
 
     private:

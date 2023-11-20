@@ -4,6 +4,7 @@
 #include "DescriptorSetSchema.hpp"
 #include "ImportShader.hpp"
 #include "LogicalDevice.hpp"
+#include <iostream>
 
 namespace MFA
 {
@@ -86,7 +87,8 @@ namespace MFA
 
 	RT::DescriptorSetGroup FlatShadingPipeline::CreatePerGeometryDescriptorSetGroup(
 		RT::BufferAndMemory const & material,
-		RT::GpuTexture const & texture
+		RT::GpuTexture const & texture,
+		RT::GpuTexture const& aoTexture
 	) const
 	{
 		auto perGeometryDescriptorSet = RB::CreateDescriptorSet(
@@ -115,6 +117,8 @@ namespace MFA
 			.imageView = texture.imageView->imageView,
 			.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 		};
+
+		std::cout << "This is a" << std::endl;
 
 		descriptorSetSchema.AddImage(&texturesSamplerInfo, 1);
 
