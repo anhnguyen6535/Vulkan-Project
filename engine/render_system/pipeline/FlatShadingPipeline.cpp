@@ -126,8 +126,8 @@ namespace MFA
 		};
 
 		// Changed
-		//descriptorSetSchema.AddImage(&aoTexturesSamplerInfo, 1);		// ERROR WHEN ADD THIS LINE
 		descriptorSetSchema.AddImage(&texturesSamplerInfo, 1);
+		descriptorSetSchema.AddImage(&aoTexturesSamplerInfo, 1);		// ERROR WHEN ADD THIS LINE
 
 		descriptorSetSchema.UpdateDescriptorSets();
 
@@ -188,12 +188,12 @@ namespace MFA
 		});
 
 		// Changed: ao 
-		//bindings.emplace_back(VkDescriptorSetLayoutBinding{
-		//	.binding = static_cast<uint32_t>(bindings.size()),
-		//	.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-		//	.descriptorCount = 1,
-		//	.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
-		//});
+		bindings.emplace_back(VkDescriptorSetLayoutBinding{
+			.binding = static_cast<uint32_t>(bindings.size()),
+			.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+			.descriptorCount = 1,
+			.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
+		});
 
 		mPerGeometryDescriptorLayout = RB::CreateDescriptorSetLayout(
 			LogicalDevice::Instance->GetVkDevice(),
