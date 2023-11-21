@@ -24,6 +24,7 @@ sampler textureSampler : register(s1, space0);
 ConstantBuffer <Material> material: register(b0, space1);
 
 Texture2D baseColorTexture : register(t1, space1);
+Texture2D aoColorTexture : register(t1, space1);
 
 PSOut main(PSIn input) {
     PSOut output;

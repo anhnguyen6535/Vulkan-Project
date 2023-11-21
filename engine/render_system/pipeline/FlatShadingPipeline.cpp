@@ -118,8 +118,15 @@ namespace MFA
 			.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 		};
 
-		std::cout << "This is a" << std::endl;
+		// Changed: aoBaseColor
+		VkDescriptorImageInfo const aoTexturesSamplerInfo{
+			.sampler = VK_NULL_HANDLE,
+			.imageView = aoTexture.imageView->imageView,
+			.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+		};
 
+		// Changed
+		//descriptorSetSchema.AddImage(&aoTexturesSamplerInfo, 1);		// ERROR WHEN ADD THIS LINE
 		descriptorSetSchema.AddImage(&texturesSamplerInfo, 1);
 
 		descriptorSetSchema.UpdateDescriptorSets();
@@ -179,6 +186,14 @@ namespace MFA
 			.descriptorCount = 1,
 			.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
 		});
+
+		// Changed: ao 
+		//bindings.emplace_back(VkDescriptorSetLayoutBinding{
+		//	.binding = static_cast<uint32_t>(bindings.size()),
+		//	.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+		//	.descriptorCount = 1,
+		//	.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
+		//});
 
 		mPerGeometryDescriptorLayout = RB::CreateDescriptorSetLayout(
 			LogicalDevice::Instance->GetVkDevice(),

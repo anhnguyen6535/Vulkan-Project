@@ -281,6 +281,8 @@ namespace MFA
 					gpuTexture = _textures[primitive.baseColorTextureIndex].get();
 				}
 
+				
+				// Add another gpuTexture because now CreatePerGeometryDescriptorSetGroup needs 2 param
 				_descriptorSets.emplace_back(
 					_pipeline->CreatePerGeometryDescriptorSetGroup(
 						*_materials[nextMaterialIdx]->buffers[0],

@@ -201,10 +201,12 @@ private:
 
 	void CreateGpuTexture()
 	{
-		auto const path = Path::Instance->Get("models/chess_bishop/bishop.colour.white.png");
+		//auto const path = Path::Instance->Get("models/Flag_of_Canada.png");
+		auto const path = Path::Instance->Get("models/chess_bishop/bishop.colour.black.png");
 		MFA_ASSERT(std::filesystem::exists(path));
 		auto const cpuTexture = Importer::UncompressedImage(path);
 
+		// Changed: load ao image
 		auto const aoPath = Path::Instance->Get("models/chess_bishop/bishop.ao.png");
 		MFA_ASSERT(std::filesystem::exists(aoPath));
 		auto const aoCpuTexture = Importer::UncompressedImage(aoPath);
@@ -222,6 +224,7 @@ private:
 			commandBuffer
 		);
 
+		// Changed: create ao texture 
 		auto [aoTexture, aoStagingBuffer] = RB::CreateTexture(
 			*aoCpuTexture,
 			LogicalDevice::Instance->GetVkDevice(),
@@ -230,7 +233,7 @@ private:
 		);
 
 		_texture = texture;
-		_aoTexture = aoTexture;
+		_aoTexture = aoTexture; // Changed
 
 		RB::EndAndSubmitSingleTimeCommand(
 			device->GetVkDevice(),
@@ -287,9 +290,10 @@ private:
 		);
 	}
 
+	// Changed
 	void CreateDescriptorSet()
 	{
-		_perGeometryDescriptorSet = _pipeline->CreatePerGeometryDescriptorSetGroup(*_material->buffers[0], *_texture, *_aoTexture);
+		_perGeometryDescriptorSet = _pipeline->CreatePerGeometryDescriptorSetGroup(*_material->buffers[0], *_texture, *_aoTexture);		// pass aoTexture to descriptorSet
 	}
 
 	std::shared_ptr<PointRenderer> _pointRenderer{};
