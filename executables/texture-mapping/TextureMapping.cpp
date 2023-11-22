@@ -121,8 +121,12 @@ public:
 		_model = scaleMatrix * _model;
 
 		if (reset) {
+			colorEnabled = false;
+			aoEnabled = false;
+			perlinEnabled = false;
 			rotationEnabled = false;
 			extrinsicEnabled = false;
+			renderWireframe = false;
 			scale = 1.0f;
 			m = 24.0f;
 			_model = glm::mat4(1.0f);
