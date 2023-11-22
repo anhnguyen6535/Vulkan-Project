@@ -29,6 +29,12 @@ bool colorEnabled = false;
 bool aoEnabled = false;
 bool perlinEnabled = false;
 int m = 24;
+bool extrinsicEnabled = false;
+bool rotationEnabled = false;
+int angleX = 0;
+int angleY = 0;
+int angleZ = 0;
+
 
 void UI_Loop()
 {
@@ -43,10 +49,17 @@ void UI_Loop()
 		ImGui::InputInt("m:", &m);
 		ImGui::SameLine();
 		ImGui::Text("%d", m);
-
 	}
+	ImGui::Checkbox("Extrinsic", &extrinsicEnabled);
+	ImGui::Checkbox("Rotate", &rotationEnabled);
+	ImGui::InputInt("Rotate x:", &angleX);
+	ImGui::InputInt("rotate y", &angleY);
+	ImGui::InputInt("rotate z", &angleZ);
 
 	ui->EndWindow();
+
+
+	
 };
 
 class FlagMesh
@@ -80,6 +93,36 @@ public:
 		CreateDescriptorSet();
 	}
 
+	void objectUpdateConstants() {
+		glm::mat4 rotationX = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		glm::mat4 rotationY = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::mat4 rotationZ = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		// Combine rotations & default angle of rotation
+		glm::mat4 combinedRotation;
+
+		if (rotationEnabled) {
+			rotationX = glm::rotate(glm::mat4(1.0f), glm::radians(float(angleX)), glm::vec3(1.0f, 0.0f, 0.0f));
+			rotationY = glm::rotate(glm::mat4(1.0f), glm::radians(float(angleY)), glm::vec3(0.0f, 1.0f, 0.0f));
+			rotationZ = glm::rotate(glm::mat4(1.0f), glm::radians(float(angleZ)), glm::vec3(0.0f, 0.0f, 1.0f));
+
+			if (!extrinsicEnabled) {
+				combinedRotation = rotationZ * rotationY * rotationX;
+				_model = _model * combinedRotation;
+			}
+			else {
+				combinedRotation = rotationX * rotationY * rotationZ;
+				_model = combinedRotation * _model;
+			}
+		}
+
+		//if (isScaled) {
+		//	glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(scaleRate));
+		//	pushConstants.model *= scaleMatrix;
+		//	isScaled = false;
+		//}
+	}
+
 	void Render(RT::CommandRecordState& recordState)
 	{
 		if (renderWireframe == true)
@@ -90,7 +133,12 @@ public:
 		{
 			_pipeline->BindPipeline(recordState);
 		}
+
+		if (extrinsicEnabled) {
+			//rotationX 
+		}
 		
+		objectUpdateConstants();
 		RB::AutoBindDescriptorSet(
 			recordState, 
 			RB::UpdateFrequency::PerGeometry, 
