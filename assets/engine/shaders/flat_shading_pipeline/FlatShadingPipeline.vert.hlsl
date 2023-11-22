@@ -9,6 +9,7 @@ struct VSOut {
     float2 baseColorUV : TEXCOORD0;
     float3 worldNormal : NORMAL;
     int hasAo : TEXCOORD1;
+    int hasPerlin : TEXCOORD2;
 };
 
 struct ViewProjectionBuffer {
@@ -21,6 +22,7 @@ struct PushConsts
 {
     float4x4 model;
     int hasAo;
+    int hasPerlin;
 };
 
 [[vk::push_constant]]
@@ -37,5 +39,6 @@ VSOut main(VSIn input) {
     output.worldNormal = mul(pushConsts.model, float4(input.normal, 0.0f)).xyz;
 
     output.hasAo = pushConsts.hasAo;
+    output.hasPerlin = pushConsts.hasPerlin;
     return output;
 }

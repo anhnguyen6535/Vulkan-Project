@@ -27,6 +27,7 @@ namespace MFA
         {
             glm::mat4 model;
             int hasAo;
+            int hasPerlin;
         };
 
         struct Material
