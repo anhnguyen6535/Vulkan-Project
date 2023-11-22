@@ -8,6 +8,7 @@ struct VSOut {
     float4 position : SV_POSITION;
     float2 baseColorUV : TEXCOORD0;
     float3 worldNormal : NORMAL;
+    int hasAo : TEXCOORD1;
 };
 
 struct ViewProjectionBuffer {
@@ -19,6 +20,7 @@ ConstantBuffer <ViewProjectionBuffer> vpBuff: register(b0, space0);
 struct PushConsts
 {
     float4x4 model;
+    int hasAo;
 };
 
 [[vk::push_constant]]
@@ -34,5 +36,6 @@ VSOut main(VSIn input) {
     output.baseColorUV = input.baseColorUV;
     output.worldNormal = mul(pushConsts.model, float4(input.normal, 0.0f)).xyz;
 
+    output.hasAo = pushConsts.hasAo;
     return output;
 }

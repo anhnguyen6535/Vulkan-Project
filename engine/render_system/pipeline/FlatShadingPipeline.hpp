@@ -26,6 +26,7 @@ namespace MFA
         struct PushConstants
         {
             glm::mat4 model;
+            int hasAo;
         };
 
         struct Material

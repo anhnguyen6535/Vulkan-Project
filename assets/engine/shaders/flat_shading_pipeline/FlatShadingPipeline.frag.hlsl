@@ -4,6 +4,7 @@ struct PSIn {
     float4 position : SV_POSITION;
     float2 baseColorUV : TEXCOORD0;
     float3 worldNormal : NORMAL;
+    int hasAo : TEXCOORD1;
 };
 
 struct PSOut {
@@ -31,7 +32,7 @@ PSOut main(PSIn input) {
 
     float3 color;
     float alpha;
-    float3 lightDir = float3(1.0f, 1.0f, 0.0f);
+    //float3 lightDir = float3(1.0f, 1.0f, 0.0f);
     float aStrength = 0.1f;
     float3 sStrength = float3(0.5f, 0.5f, 0.5f);
     float3 viewDir = float3(mul(input.position.xyz, 1 / input.position.w));
@@ -50,11 +51,11 @@ PSOut main(PSIn input) {
         color = baseColorTexture.Sample(textureSampler, input.baseColorUV);
         //float3 ao = aoColorTexture.Sample(textureSampler, input.aoUV).rgb : float3(1.0, 1.0, 1.0);
 
-        float3 newStrengths = aoStrength * aStrength * aoColorTexture.Sample(textureSampler, input.baseColorUV);
-        color = float3(color.r * newStrengths.r, color.b * newStrengths.b, color.g * newStrengths.g);
+        //float3 newStrengths = aoStrength * aStrength * aoColorTexture.Sample(textureSampler, input.baseColorUV);
+        //color = float3(color.r * newStrengths.r, color.b * newStrengths.b, color.g * newStrengths.g);
 
         // Combine base color with AO
-        color = baseColor * ao;
+        //color = baseColor * ao;
         alpha = 1.0;
     }
 
@@ -62,7 +63,15 @@ PSOut main(PSIn input) {
     // float3 lightDir = float3(-1.0f, -1.0f, -1.0f);
     float3 lightDir = float3(1.0f, 1.0f, 1.0f);
     // float ambient = 0.25f;
-    float ambient = 0.25f;
+    float3 ambient = aStrength * color;
+
+    if (input.hasAo == 1) {
+        ambient.x = aoColorTexture.Sample(textureSampler, input.baseColorUV);
+        ambient.y = aoColorTexture.Sample(textureSampler, input.baseColorUV);
+        ambient.z = aoColorTexture.Sample(textureSampler, input.baseColorUV);
+
+        ambient *= aStrength * color;
+    }
 
     float dot = dot(normalize(-lightDir), normalize(input.worldNormal));
     float3 dirLight = max(dot, 0.0f) * color;

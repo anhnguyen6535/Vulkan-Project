@@ -24,12 +24,14 @@
 using namespace MFA;
 
 bool renderWireframe = false;
+bool aoEnabled = false;
 
 void UI_Loop()
 {
 	auto ui = UI::Instance;
 	ui->BeginWindow("Settings");
 	ImGui::Checkbox("Wireframe enable", &renderWireframe);
+	ImGui::Checkbox("Ao enable", &aoEnabled);
 	ui->EndWindow();
 };
 
@@ -84,7 +86,8 @@ public:
 		_pipeline->SetPushConstants(
 			recordState,
 			FlatShadingPipeline::PushConstants{
-				.model = _model
+				.model = _model,
+				.hasAo = aoEnabled ? 1 : 0,
 			}
 		);
 		
