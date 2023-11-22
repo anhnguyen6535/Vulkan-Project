@@ -34,7 +34,8 @@ bool rotationEnabled = false;
 int angleX = 0;
 int angleY = 0;
 int angleZ = 0;
-
+float scale = 1;
+bool reset = false;
 
 void UI_Loop()
 {
@@ -55,11 +56,11 @@ void UI_Loop()
 	ImGui::InputInt("Rotate x:", &angleX);
 	ImGui::InputInt("rotate y", &angleY);
 	ImGui::InputInt("rotate z", &angleZ);
+	ImGui::Checkbox("Reset", &reset);
 
+	//ImGui::InputFloat("scale", &scale);
 	ui->EndWindow();
 
-
-	
 };
 
 class FlagMesh
@@ -100,6 +101,7 @@ public:
 
 		// Combine rotations & default angle of rotation
 		glm::mat4 combinedRotation;
+		glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(scale));
 
 		if (rotationEnabled) {
 			rotationX = glm::rotate(glm::mat4(1.0f), glm::radians(float(angleX)), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -116,11 +118,16 @@ public:
 			}
 		}
 
-		//if (isScaled) {
-		//	glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(scaleRate));
-		//	pushConstants.model *= scaleMatrix;
-		//	isScaled = false;
-		//}
+		_model = scaleMatrix * _model;
+
+		if (reset) {
+			rotationEnabled = false;
+			extrinsicEnabled = false;
+			scale = 1.0f;
+			m = 24.0f;
+			_model = glm::mat4(1.0f);
+			reset = false;
+		}
 	}
 
 	void Render(RT::CommandRecordState& recordState)
@@ -133,12 +140,9 @@ public:
 		{
 			_pipeline->BindPipeline(recordState);
 		}
-
-		if (extrinsicEnabled) {
-			//rotationX 
-		}
 		
-		objectUpdateConstants();
+		objectUpdateConstants();		// handle object transformation
+		
 		RB::AutoBindDescriptorSet(
 			recordState, 
 			RB::UpdateFrequency::PerGeometry, 
@@ -152,7 +156,7 @@ public:
 				.hasBaseColor = colorEnabled ? 1 : 0,
 				.hasAo = aoEnabled ? 1 : 0,
 				.hasPerlin = perlinEnabled ? 1 : 0,
-				.m = m,
+				.m = (m > 0) ? m : -m,
 			}
 		);
 		
