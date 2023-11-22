@@ -20,6 +20,7 @@
 #include <filesystem>
 
 #include "ImportObj.hpp"
+#include <camera/ArcballCamera.hpp>
 
 using namespace MFA;
 
@@ -426,7 +427,7 @@ int main()
 			device->GetMaxFramePerFlight()
 		);
 
-		ObserverCamera camera{};
+		ArcballCamera camera{};
 		camera.Setposition({ 0.0f, 0.0f, 5.0f });
 
 		auto ComputeViewProjectionMat4 = [&camera]()->glm::mat4
