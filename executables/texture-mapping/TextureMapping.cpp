@@ -203,6 +203,18 @@ private:
 		);
 	}
 
+	std::vector<std::vector<float>> GenerateGrid(int size) {
+		std::vector<std::vector<float>> grid(size, std::vector<float>(size));
+
+		for (int i = 0; i < size; i++) {
+			for (int j = 0; j < size; j++) {
+				grid[i][j] = Math::Random(0, 255);
+			}
+		}
+
+		return grid;
+	}
+
 	void CreateGpuTexture()
 	{
 		//auto const path = Path::Instance->Get("models/Flag_of_Canada.png");
@@ -215,14 +227,24 @@ private:
 		MFA_ASSERT(std::filesystem::exists(aoPath));
 		auto const aoCpuTexture = Importer::UncompressedImage(aoPath);
 
-		int width = 512;
-		int height = 512;
+		int width = 16;
+		int height = 16;
 		int components = 4;
+		std::vector<std::vector<float>> grid = GenerateGrid(width);
 		auto const blob = Memory::AllocSize(width * height * components);
 		auto* ptr = blob->As<uint8_t>();
 		for (int i = 0; i < width * height * components; ++i)
 		{
 			ptr[i] = Math::Random(0, 255);
+		}
+
+		for (int y = 0; y < 16; y++) {
+			for (int x = 0; x < 16; x++) {
+				ptr[y * 4 * 16 + x * 4] = grid[y][x]; 	  //R
+				ptr[y * 4 * 16 + x * 4 + 1] = grid[y][x]; //G
+				ptr[y * 4 * 16 + x * 4 + 2] = grid[y][x]; //B
+				ptr[y * 4 * 16 + x * 4 + 3] = 255;
+			}
 		}
 
 		auto proCpuTexture = Importer::InMemoryTexture(
