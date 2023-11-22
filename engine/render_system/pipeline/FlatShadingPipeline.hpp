@@ -71,7 +71,8 @@ namespace MFA
         RT::DescriptorSetGroup CreatePerGeometryDescriptorSetGroup(
             RT::BufferAndMemory const& material,
             RT::GpuTexture const& texture,
-            RT::GpuTexture const& aoTexture
+            RT::GpuTexture const& aoTexture,
+            RT::GpuTexture const& proTexture
         ) const;
 
     private:

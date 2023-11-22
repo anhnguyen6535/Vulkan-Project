@@ -26,6 +26,7 @@ ConstantBuffer <Material> material: register(b0, space1);
 
 Texture2D baseColorTexture : register(t1, space1);
 Texture2D aoColorTexture : register(t2, space1);
+Texture2D proTexture : register(t3, space1);
 
 PSOut main(PSIn input) {
     PSOut output;
@@ -48,7 +49,7 @@ PSOut main(PSIn input) {
     }
     else
     {
-        color = baseColorTexture.Sample(textureSampler, input.baseColorUV);
+        color = proTexture.Sample(textureSampler, input.baseColorUV);
         //float3 ao = aoColorTexture.Sample(textureSampler, input.aoUV).rgb : float3(1.0, 1.0, 1.0);
 
         //float3 newStrengths = aoStrength * aStrength * aoColorTexture.Sample(textureSampler, input.baseColorUV);

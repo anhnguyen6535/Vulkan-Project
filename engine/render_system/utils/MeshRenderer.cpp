@@ -287,6 +287,7 @@ namespace MFA
 					_pipeline->CreatePerGeometryDescriptorSetGroup(
 						*_materials[nextMaterialIdx]->buffers[0],
 						*gpuTexture,
+						*gpuTexture,
 						*gpuTexture
 					)
 				);

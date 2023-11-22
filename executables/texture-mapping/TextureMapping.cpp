@@ -215,6 +215,24 @@ private:
 		MFA_ASSERT(std::filesystem::exists(aoPath));
 		auto const aoCpuTexture = Importer::UncompressedImage(aoPath);
 
+		int width = 512;
+		int height = 512;
+		int components = 4;
+		auto const blob = Memory::AllocSize(width * height * components);
+		auto* ptr = blob->As<uint8_t>();
+		for (int i = 0; i < width * height * components; ++i)
+		{
+			ptr[i] = Math::Random(0, 255);
+		}
+
+		auto proCpuTexture = Importer::InMemoryTexture(
+			*blob,
+			width,
+			height,
+			Asset::Texture::Format::UNCOMPRESSED_UNORM_R8G8B8A8_LINEAR,
+			components
+		);
+
 		auto const* device = LogicalDevice::Instance;
 		auto const commandBuffer = RB::BeginSingleTimeCommand(
 			device->GetVkDevice(),
@@ -236,8 +254,17 @@ private:
 			commandBuffer
 		);
 
+		// Changed: create procedural texture from random grid 
+		auto [proTexture, proStagingBuffer] = RB::CreateTexture(
+			*proCpuTexture,
+			LogicalDevice::Instance->GetVkDevice(),
+			LogicalDevice::Instance->GetPhysicalDevice(),
+			commandBuffer
+		);
+
 		_texture = texture;
 		_aoTexture = aoTexture; // Changed
+		_proTexture = proTexture;
 
 		RB::EndAndSubmitSingleTimeCommand(
 			device->GetVkDevice(),
@@ -297,7 +324,7 @@ private:
 	// Changed
 	void CreateDescriptorSet()
 	{
-		_perGeometryDescriptorSet = _pipeline->CreatePerGeometryDescriptorSetGroup(*_material->buffers[0], *_texture, *_aoTexture);		// pass aoTexture to descriptorSet
+		_perGeometryDescriptorSet = _pipeline->CreatePerGeometryDescriptorSetGroup(*_material->buffers[0], *_texture, *_aoTexture, *_proTexture);		// pass aoTexture to descriptorSet
 	}
 
 	std::shared_ptr<PointRenderer> _pointRenderer{};
@@ -315,6 +342,7 @@ private:
 
 	std::shared_ptr<RT::GpuTexture> _texture{};
 	std::shared_ptr<RT::GpuTexture> _aoTexture{};
+	std::shared_ptr<RT::GpuTexture> _proTexture{};
 	std::shared_ptr<RT::BufferGroup> _material{};
 	
 	RT::DescriptorSetGroup _perGeometryDescriptorSet;

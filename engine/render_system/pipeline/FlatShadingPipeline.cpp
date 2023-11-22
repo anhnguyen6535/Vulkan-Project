@@ -88,7 +88,8 @@ namespace MFA
 	RT::DescriptorSetGroup FlatShadingPipeline::CreatePerGeometryDescriptorSetGroup(
 		RT::BufferAndMemory const & material,
 		RT::GpuTexture const & texture,
-		RT::GpuTexture const& aoTexture
+		RT::GpuTexture const& aoTexture,
+		RT::GpuTexture const& proTexture
 	) const
 	{
 		auto perGeometryDescriptorSet = RB::CreateDescriptorSet(
@@ -118,16 +119,24 @@ namespace MFA
 			.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 		};
 
-		// Changed: aoBaseColor
+		// Changed: ao texture
 		VkDescriptorImageInfo const aoTexturesSamplerInfo{
 			.sampler = VK_NULL_HANDLE,
 			.imageView = aoTexture.imageView->imageView,
 			.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 		};
 
+		// Changed: procedural texture
+		VkDescriptorImageInfo const proTexturesSamplerInfo{
+			.sampler = VK_NULL_HANDLE,
+			.imageView = proTexture.imageView->imageView,
+			.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+		};
+
 		// Changed
 		descriptorSetSchema.AddImage(&texturesSamplerInfo, 1);
-		descriptorSetSchema.AddImage(&aoTexturesSamplerInfo, 1);		// ERROR WHEN ADD THIS LINE
+		descriptorSetSchema.AddImage(&aoTexturesSamplerInfo, 1);	
+		descriptorSetSchema.AddImage(&proTexturesSamplerInfo, 1);
 
 		descriptorSetSchema.UpdateDescriptorSets();
 
@@ -188,6 +197,14 @@ namespace MFA
 		});
 
 		// Changed: ao 
+		bindings.emplace_back(VkDescriptorSetLayoutBinding{
+			.binding = static_cast<uint32_t>(bindings.size()),
+			.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+			.descriptorCount = 1,
+			.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
+		});
+
+		// procedural
 		bindings.emplace_back(VkDescriptorSetLayoutBinding{
 			.binding = static_cast<uint32_t>(bindings.size()),
 			.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
