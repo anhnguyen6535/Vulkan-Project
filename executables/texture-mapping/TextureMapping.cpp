@@ -60,7 +60,7 @@ void UI_Loop()
 	ImGui::InputInt("Rotate z", &angleZ);
 	ImGui::Checkbox("Reset", &reset);
 
-	(m > 0) ? m : -m;
+	(m > 0) ? m : -m;	// handle m input
 	ui->EndWindow();
 
 };
@@ -96,6 +96,7 @@ public:
 		CreateDescriptorSet();
 	}
 
+	// Update Object Transformation
 	void objectUpdateConstants() {
 		glm::mat4 rotationX = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 		glm::mat4 rotationY = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -119,10 +120,6 @@ public:
 				_model = combinedRotation * _model;
 			}
 		}
-
-		//scale >= 2.5 ? scale = 2.5 : scale;
-		//scale <= 0.5 ? scale = 0.5 : scale;
-		//std::cout << "SCALE: " << scale << std::endl;
 		
 		if (scale != oldScale) {
 			oldScale = scale;
@@ -130,9 +127,7 @@ public:
 			std::cout << "SCALE: " << scale << std::endl;
 			_model = scaleMatrix * _model;
 			
-		}
-
-		
+		}	
 
 		// reset all gui
 		if (reset) {
@@ -292,6 +287,7 @@ private:
 		);
 	}
 
+	// Generate a grid [0,15]^2 contains random values
 	std::vector<std::vector<float>> GenerateGrid(int size) {
 		std::vector<std::vector<float>> grid(size, std::vector<float>(size));
 
@@ -300,7 +296,6 @@ private:
 				grid[i][j] = Math::Random(0, 255);
 			}
 		}
-
 		return grid;
 	}
 
