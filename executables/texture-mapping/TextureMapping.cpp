@@ -25,6 +25,7 @@
 using namespace MFA;
 
 bool renderWireframe = false;
+bool colorEnabled = false;
 bool aoEnabled = false;
 bool perlinEnabled = false;
 
@@ -33,6 +34,7 @@ void UI_Loop()
 	auto ui = UI::Instance;
 	ui->BeginWindow("Settings");
 	ImGui::Checkbox("Wireframe enable", &renderWireframe);
+	ImGui::Checkbox("Base color enable", &colorEnabled);
 	ImGui::Checkbox("Ao enable", &aoEnabled);
 	ImGui::Checkbox("Perlin enable", &perlinEnabled);
 	ui->EndWindow();
@@ -90,6 +92,7 @@ public:
 			recordState,
 			FlatShadingPipeline::PushConstants{
 				.model = _model,
+				.hasBaseColor = colorEnabled ? 1 : 0,
 				.hasAo = aoEnabled ? 1 : 0,
 				.hasPerlin = perlinEnabled ? 1 : 0
 			}

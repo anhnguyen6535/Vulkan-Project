@@ -4,8 +4,9 @@ struct PSIn {
     float4 position : SV_POSITION;
     float2 baseColorUV : TEXCOORD0;
     float3 worldNormal : NORMAL;
-    int hasAo : TEXCOORD1;
-    int hasPerlin : TEXCOORD2;
+    int hasColor : TEXCOORD1;
+    int hasAo : TEXCOORD2;
+    int hasPerlin : TEXCOORD3;
 };
 
 struct PSOut {
@@ -43,7 +44,7 @@ PSOut main(PSIn input) {
     float aoStrength = 5.0f;
     //float m = 10.0f;
 
-    if (material.hasBaseColorTexture == 0)
+    if (input.hasColor == 0)
     {
         color = material.color.rgb;
         alpha = material.color.a;
