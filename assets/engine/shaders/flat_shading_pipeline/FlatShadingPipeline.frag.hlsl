@@ -2,12 +2,14 @@
 
 struct PSIn {
     float4 position : SV_POSITION;
+    float4 world : POSITION0;
     float2 baseColorUV : TEXCOORD0;
     float3 worldNormal : NORMAL;
     int hasColor : TEXCOORD1;
     int hasAo : TEXCOORD2;
     int hasPerlin : TEXCOORD3;
     int m : TEXCOORD4;
+    float3 camPosition : TEXCOORD5;
 };
 
 struct PSOut {
@@ -36,15 +38,15 @@ PSOut main(PSIn input) {
 
     float3 color;
     float alpha;
-    //float3 lightDir = float3(1.0f, 1.0f, 0.0f);
-    float aStrength = 0.1f;
-    float3 sStrength = float3(0.5f, 0.5f, 0.5f);
-    float3 viewDir = float3(mul(input.position.xyz, 1 / input.position.w));
-    float spec_pow = pow(2, 2);
-    float lightCol = float3(1.0f, 1.0f, 1.0f);
-    float aoStrength = 5.0f;
-    //float m = 10.0f;
 
+    float3 lightDir = float3(1.0f, 1.0f, 1.0f);
+    float amIntensity = 0.1f;
+    float3 specIntensity = float3(0.5f, 0.5f, 0.5f);
+    float spec_pow = pow(2, 2);
+    float3 lightCol = float3(0.870588f, 0.929412f, 0.686275f);
+
+
+    // handle base color texture toggle
     if (input.hasColor == 0)
     {
         color = material.color.rgb;
@@ -53,23 +55,15 @@ PSOut main(PSIn input) {
     else
     {
         color = baseColorTexture.Sample(textureSampler, input.baseColorUV);
-        //float3 ao = aoColorTexture.Sample(textureSampler, input.aoUV).rgb : float3(1.0, 1.0, 1.0);
-
-        //float3 newStrengths = aoStrength * aStrength * aoColorTexture.Sample(textureSampler, input.baseColorUV);
-        //color = float3(color.r * newStrengths.r, color.b * newStrengths.b, color.g * newStrengths.g);
-
-        // Combine base color with AO
-        //color = baseColor * ao;
         alpha = 1.0;
     }
 
-
-    // will change
+    // Turbulence function for Perlin Texture
     float tur = 0.0f;
-    //int m = 24;
     if (input.hasPerlin == 1) {
-        for (int i = 0; i < 4; i++) {
-            // Noise(2^i * x,2^i * y)
+
+        // Noise(2^i * x,2^i * y)  with i 0->4
+        for (int i = 0; i < 5; i++) {
             float rate = pow(2, i);
             tur += proTexture.Sample(textureSampler, float2 (input.baseColorUV.x * rate, input.baseColorUV.y * rate)) / rate;
         }
@@ -77,33 +71,38 @@ PSOut main(PSIn input) {
         float s = (1 + sin(input.m * 3.14159f * (input.baseColorUV.x + input.baseColorUV.y + tur))) / 2;
 
         color = (1 - s) * color + s * lightCol;     // blend color and light color
-        //float3 light_orange = float3(1.0f, 0.341f, 0.2f);
-        //color = lerp(color, light_orange, s);
     }
 
-
-    
-    // float3 lightDir = float3(-1.0f, -1.0f, -1.0f);
-    float3 lightDir = float3(1.0f, 1.0f, 1.0f);
-    // float ambient = 0.25f;
-    float3 ambient = aStrength * color;
+    // handle AO
+    float3 ambient = amIntensity * color;
 
     if (input.hasAo == 1) {
         ambient = aoColorTexture.Sample(textureSampler, input.baseColorUV);
-        //ambient.y = aoColorTexture.Sample(textureSampler, input.baseColorUV);
-        //ambient.z = aoColorTexture.Sample(textureSampler, input.baseColorUV);
-
-        ambient *= aStrength * color;
+        ambient *= amIntensity * color;
     }
 
-    float dot = dot(normalize(-lightDir), normalize(input.worldNormal));
-    float3 dirLight = max(dot, 0.0f) * color;
-    float3 color2 = dirLight + ambient * color;
-    // color = ambient * color;
+ 
+    float3 worldDir = normalize(input.worldNormal);   // normal
+    float3 lightNormal = normalize(lightDir);
+    float3 viewDir = normalize(input.world.xyz - input.camPosition);      // view direction
 
-    //color2 = ApplyExposureToneMapping(color2);
-    //// Gamma correct
-    //color2 = ApplyGammaCorrection(color2); 
+    float3 R = reflect(lightNormal, worldDir);   // perfectly reflection direction
+
+    float angleIn = dot(worldDir, lightNormal);
+    float angleOut = dot(viewDir, R);
+
+    if (angleIn < 0) {
+        angleIn = 0.0f;
+        angleOut = 0.0f;
+    }
+    if (angleOut < 0) {
+        angleOut = 0.0f;
+    }
+
+    float3 diffuse = angleIn * color;
+    float3 spec = pow(angleOut, spec_pow) * specIntensity;
+
+    float3 color2 = (ambient + diffuse + spec) * lightCol;
 
     output.color = float4(color2, alpha);
     return output;

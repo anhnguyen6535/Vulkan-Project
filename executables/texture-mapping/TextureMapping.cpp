@@ -21,9 +21,11 @@
 
 #include "ImportObj.hpp"
 #include <camera/ArcballCamera.hpp>
+#include <iostream>
 
 using namespace MFA;
 
+//--------- IMGUI -------------//
 bool renderWireframe = false;
 bool colorEnabled = false;
 bool aoEnabled = false;
@@ -37,6 +39,10 @@ int angleZ = 0;
 float scale = 1;
 bool reset = false;
 
+//-----other variables ------//
+float oldScale = 1;
+glm::vec3 camPosition;
+
 void UI_Loop()
 {
 	auto ui = UI::Instance;
@@ -45,20 +51,16 @@ void UI_Loop()
 	ImGui::Checkbox("Base color enable", &colorEnabled);
 	ImGui::Checkbox("Ao enable", &aoEnabled);
 	ImGui::Checkbox("Perlin enable", &perlinEnabled);
-	if (perlinEnabled) {
-
-		ImGui::InputInt("m:", &m);
-		ImGui::SameLine();
-		ImGui::Text("%d", m);
-	}
+	if (perlinEnabled) ImGui::InputInt("m", &m);
+	ImGui::InputFloat("scale", &scale, 0.5f);
 	ImGui::Checkbox("Extrinsic", &extrinsicEnabled);
 	ImGui::Checkbox("Rotate", &rotationEnabled);
-	ImGui::InputInt("Rotate x:", &angleX);
-	ImGui::InputInt("rotate y", &angleY);
-	ImGui::InputInt("rotate z", &angleZ);
+	ImGui::InputInt("Rotate x", &angleX);
+	ImGui::InputInt("Rotate y", &angleY);
+	ImGui::InputInt("Rotate z", &angleZ);
 	ImGui::Checkbox("Reset", &reset);
 
-	//ImGui::InputFloat("scale", &scale);
+	(m > 0) ? m : -m;
 	ui->EndWindow();
 
 };
@@ -99,9 +101,9 @@ public:
 		glm::mat4 rotationY = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		glm::mat4 rotationZ = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
-		// Combine rotations & default angle of rotation
+		// Combine rotations 
 		glm::mat4 combinedRotation;
-		glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(scale));
+		
 
 		if (rotationEnabled) {
 			rotationX = glm::rotate(glm::mat4(1.0f), glm::radians(float(angleX)), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -118,8 +120,21 @@ public:
 			}
 		}
 
-		_model = scaleMatrix * _model;
+		//scale >= 2.5 ? scale = 2.5 : scale;
+		//scale <= 0.5 ? scale = 0.5 : scale;
+		//std::cout << "SCALE: " << scale << std::endl;
+		
+		if (scale != oldScale) {
+			oldScale = scale;
+			glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3{ scale, scale, scale });
+			std::cout << "SCALE: " << scale << std::endl;
+			_model = scaleMatrix * _model;
+			
+		}
 
+		
+
+		// reset all gui
 		if (reset) {
 			colorEnabled = false;
 			aoEnabled = false;
@@ -130,6 +145,7 @@ public:
 			scale = 1.0f;
 			m = 24.0f;
 			_model = glm::mat4(1.0f);
+			oldScale = 1;
 			reset = false;
 		}
 	}
@@ -160,7 +176,8 @@ public:
 				.hasBaseColor = colorEnabled ? 1 : 0,
 				.hasAo = aoEnabled ? 1 : 0,
 				.hasPerlin = perlinEnabled ? 1 : 0,
-				.m = (m > 0) ? m : -m,
+				.m = m,
+				.camPosition = camPosition
 			}
 		);
 		
@@ -536,7 +553,7 @@ std::shared_ptr<FlagMesh> GenerateFlag(
 	return std::make_shared<FlagMesh>(
 		pipeline,
 		wireframePipeline,
-		glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f },
+		glm::vec4{ 1.0f, 1.0f, 1.0f, 1.0f },
 		vertices,
 		triangles,
 		uvs,
@@ -674,6 +691,7 @@ int main()
 
 				displayRenderPass->Begin(recordState);
 
+				camPosition = camera.Getposition();
 				flagMesh->Render(recordState);
 				ui->Render(recordState, deltaTimeSec);
 

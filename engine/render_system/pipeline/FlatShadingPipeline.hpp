@@ -30,6 +30,7 @@ namespace MFA
             int hasAo;
             int hasPerlin;
             int m;
+            glm::vec3 camPosition;
         };
 
         struct Material
