@@ -142,7 +142,7 @@ public:
 		}
 		
 		objectUpdateConstants();		// handle object transformation
-		
+
 		RB::AutoBindDescriptorSet(
 			recordState, 
 			RB::UpdateFrequency::PerGeometry, 
