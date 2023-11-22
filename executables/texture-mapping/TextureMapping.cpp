@@ -438,6 +438,36 @@ private:
 	RT::DescriptorSetGroup _perGeometryDescriptorSet;
 };
 
+void CalculateBoundingBox(Importer::ObjModel& objModel) {
+	glm::vec3 minBound = objModel.vertices[0].position;
+	glm::vec3 maxBound = objModel.vertices[0].position;
+
+	for (int i = 0; i < objModel.vertices.size(); i++) {
+		minBound = glm::min(minBound, objModel.vertices[i].position);
+		maxBound = glm::max(maxBound, objModel.vertices[i].position);
+	}
+
+	glm::vec3 offset = (minBound + maxBound) / 2.0f;
+
+	//Calculate size of the bounding box
+	glm::vec3 boundingBoxSize = maxBound - minBound;
+
+	// Determine the maximum dimension of the bounding box
+	float maxDimension = glm::compMax(boundingBoxSize);
+
+	//Calculate the scaling factor for uniform scaling
+	float scaleFactor = 2.0f / maxDimension;
+
+	for (int i = 0; i < objModel.vertices.size(); i++) {
+		objModel.vertices[i].position.x -= offset.x;
+		objModel.vertices[i].position.y -= offset.y;
+		objModel.vertices[i].position.z -= offset.z;
+
+		objModel.vertices[i].position *= scaleFactor;
+	}
+}
+
+
 std::shared_ptr<FlagMesh> GenerateFlag(
 	std::shared_ptr<FlatShadingPipeline> const& pipeline,
 	std::shared_ptr<FlatShadingPipeline> const& wireframePipeline
@@ -456,6 +486,9 @@ std::shared_ptr<FlagMesh> GenerateFlag(
 	{
 		triangles.emplace_back(std::tuple{ objModel.indices[i], objModel.indices[i + 1], objModel.indices[i + 2] });
 	}
+
+	CalculateBoundingBox(objModel);		// calculate bounding box to center obj 
+
 	for (auto & vertex : objModel.vertices)
 	{
 		vertices.emplace_back(vertex.position);
