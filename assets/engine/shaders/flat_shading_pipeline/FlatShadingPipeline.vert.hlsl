@@ -11,6 +11,7 @@ struct VSOut {
     int hasColor : TEXCOORD1;
     int hasAo : TEXCOORD2;
     int hasPerlin : TEXCOORD3;
+    int m : TEXCOORD4;
 };
 
 struct ViewProjectionBuffer {
@@ -25,6 +26,7 @@ struct PushConsts
     int hasColor;
     int hasAo;
     int hasPerlin;
+    int m;
 };
 
 [[vk::push_constant]]
@@ -43,5 +45,6 @@ VSOut main(VSIn input) {
     output.hasColor = pushConsts.hasColor;
     output.hasAo = pushConsts.hasAo;
     output.hasPerlin = pushConsts.hasPerlin;
+    output.m = pushConsts.m;
     return output;
 }

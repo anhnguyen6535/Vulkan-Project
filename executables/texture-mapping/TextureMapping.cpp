@@ -28,6 +28,7 @@ bool renderWireframe = false;
 bool colorEnabled = false;
 bool aoEnabled = false;
 bool perlinEnabled = false;
+int m = 24;
 
 void UI_Loop()
 {
@@ -37,6 +38,14 @@ void UI_Loop()
 	ImGui::Checkbox("Base color enable", &colorEnabled);
 	ImGui::Checkbox("Ao enable", &aoEnabled);
 	ImGui::Checkbox("Perlin enable", &perlinEnabled);
+	if (perlinEnabled) {
+
+		ImGui::InputInt("m:", &m);
+		ImGui::SameLine();
+		ImGui::Text("%d", m);
+
+	}
+
 	ui->EndWindow();
 };
 
@@ -94,7 +103,8 @@ public:
 				.model = _model,
 				.hasBaseColor = colorEnabled ? 1 : 0,
 				.hasAo = aoEnabled ? 1 : 0,
-				.hasPerlin = perlinEnabled ? 1 : 0
+				.hasPerlin = perlinEnabled ? 1 : 0,
+				.m = m,
 			}
 		);
 		

@@ -29,6 +29,7 @@ namespace MFA
             int hasBaseColor;
             int hasAo;
             int hasPerlin;
+            int m;
         };
 
         struct Material

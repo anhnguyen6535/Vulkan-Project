@@ -7,6 +7,7 @@ struct PSIn {
     int hasColor : TEXCOORD1;
     int hasAo : TEXCOORD2;
     int hasPerlin : TEXCOORD3;
+    int m : TEXCOORD4;
 };
 
 struct PSOut {
@@ -65,7 +66,7 @@ PSOut main(PSIn input) {
 
     // will change
     float tur = 0.0f;
-    int m = 24;
+    //int m = 24;
     if (input.hasPerlin == 1) {
         for (int i = 0; i < 4; i++) {
             // Noise(2^i * x,2^i * y)
@@ -73,7 +74,7 @@ PSOut main(PSIn input) {
             tur += proTexture.Sample(textureSampler, float2 (input.baseColorUV.x * rate, input.baseColorUV.y * rate)) / rate;
         }
 
-        float s = (1 + sin(m * 3.14159f * (input.baseColorUV.x + input.baseColorUV.y + tur))) / 2;
+        float s = (1 + sin(input.m * 3.14159f * (input.baseColorUV.x + input.baseColorUV.y + tur))) / 2;
 
         color = (1 - s) * color + s * lightCol;     // blend color and light color
         //float3 light_orange = float3(1.0f, 0.341f, 0.2f);
