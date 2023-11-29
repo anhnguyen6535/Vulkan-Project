@@ -49,13 +49,8 @@ void checkIntersections(int index){
 
     if(tmax > 0.0) {
         t = (tmin > 0) ? tmin : tmax;
-//        float scaleFactor =2;
-//        dir *= scaleFactor;
         vec3 ipoint = p2 + t*(dir);
-//        vec3 ipoint = p + (t + offsetDistances[index]) * (dir);
 
-//        float scaleFactor =0.01;
-//        ipoint *= scaleFactor;
         vec3 normal = normalize(ipoint);
 
        
@@ -66,8 +61,6 @@ void checkIntersections(int index){
         normal.z = -normal.z;
         normal = normal.xzy;
 
-//        float xOffset = 5;
-//        float yOffset = 0;
         float phi = acos(normal.z);
         float theta;
         if(abs(normal.x) < 0.001) {
@@ -77,6 +70,7 @@ void checkIntersections(int index){
         }
 
         // Offset the entire texture by adding the xOffset and yOffset
+        // add vec2 to textureCoordinate for rotate
         vec2 textureCoordinates = vec2(1.0 + 0.5 * theta / PI, phi / PI);
         // normalize coordinates for texture sampling. 
         // Top-left of texture is (0,0) in Vulkan, so we can stick to spherical coordinates
@@ -94,5 +88,5 @@ void main() {
     // intersect against sphere of radius 1 centered at the origin
     checkIntersections(1);
     checkIntersections(2);
-//    checkIntersections(3);
+    checkIntersections(3);
 }
