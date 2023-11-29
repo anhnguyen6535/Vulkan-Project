@@ -20,17 +20,49 @@
 #include <filesystem>
 
 #include "ImportObj.hpp"
+#include <camera/ArcballCamera.hpp>
+#include <iostream>
 
 using namespace MFA;
 
+//--------- IMGUI -------------//
 bool renderWireframe = false;
+bool colorEnabled = false;
+bool aoEnabled = false;
+bool perlinEnabled = false;
+int m = 24;
+bool extrinsicEnabled = false;
+bool rotationEnabled = false;
+int angleX = 0;
+int angleY = 0;
+int angleZ = 0;
+float scale = 1;
+bool reset = false;
+
+//-----other variables ------//
+float oldScale = 1;
+glm::vec3 camPosition;
 
 void UI_Loop()
 {
 	auto ui = UI::Instance;
 	ui->BeginWindow("Settings");
 	ImGui::Checkbox("Wireframe enable", &renderWireframe);
+	ImGui::Checkbox("Base color enable", &colorEnabled);
+	ImGui::Checkbox("Ao enable", &aoEnabled);
+	ImGui::Checkbox("Perlin enable", &perlinEnabled);
+	if (perlinEnabled) ImGui::InputInt("m", &m);
+	ImGui::InputFloat("scale", &scale, 0.5f);
+	ImGui::Checkbox("Extrinsic", &extrinsicEnabled);
+	ImGui::Checkbox("Rotate", &rotationEnabled);
+	ImGui::InputInt("Rotate x", &angleX);
+	ImGui::InputInt("Rotate y", &angleY);
+	ImGui::InputInt("Rotate z", &angleZ);
+	ImGui::Checkbox("Reset", &reset);
+
+	(m > 0) ? m : -m;	// handle m input
 	ui->EndWindow();
+
 };
 
 class FlagMesh
@@ -64,6 +96,55 @@ public:
 		CreateDescriptorSet();
 	}
 
+	// Update Object Transformation
+	void objectUpdateConstants() {
+		glm::mat4 rotationX = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		glm::mat4 rotationY = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::mat4 rotationZ = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		// Combine rotations 
+		glm::mat4 combinedRotation;
+		
+
+		if (rotationEnabled) {
+			rotationX = glm::rotate(glm::mat4(1.0f), glm::radians(float(angleX)), glm::vec3(1.0f, 0.0f, 0.0f));
+			rotationY = glm::rotate(glm::mat4(1.0f), glm::radians(float(angleY)), glm::vec3(0.0f, 1.0f, 0.0f));
+			rotationZ = glm::rotate(glm::mat4(1.0f), glm::radians(float(angleZ)), glm::vec3(0.0f, 0.0f, 1.0f));
+
+			if (!extrinsicEnabled) {
+				combinedRotation = rotationZ * rotationY * rotationX;
+				_model = _model * combinedRotation;
+			}
+			else {
+				combinedRotation = rotationX * rotationY * rotationZ;
+				_model = combinedRotation * _model;
+			}
+		}
+		
+		if (scale != oldScale) {
+			oldScale = scale;
+			glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3{ scale, scale, scale });
+			std::cout << "SCALE: " << scale << std::endl;
+			_model = scaleMatrix * _model;
+			
+		}	
+
+		// reset all gui
+		if (reset) {
+			colorEnabled = false;
+			aoEnabled = false;
+			perlinEnabled = false;
+			rotationEnabled = false;
+			extrinsicEnabled = false;
+			renderWireframe = false;
+			scale = 1.0f;
+			m = 24.0f;
+			_model = glm::mat4(1.0f);
+			oldScale = 1;
+			reset = false;
+		}
+	}
+
 	void Render(RT::CommandRecordState& recordState)
 	{
 		if (renderWireframe == true)
@@ -75,6 +156,8 @@ public:
 			_pipeline->BindPipeline(recordState);
 		}
 		
+		objectUpdateConstants();		// handle object transformation
+
 		RB::AutoBindDescriptorSet(
 			recordState, 
 			RB::UpdateFrequency::PerGeometry, 
@@ -84,7 +167,12 @@ public:
 		_pipeline->SetPushConstants(
 			recordState,
 			FlatShadingPipeline::PushConstants{
-				.model = _model
+				.model = _model,
+				.hasBaseColor = colorEnabled ? 1 : 0,
+				.hasAo = aoEnabled ? 1 : 0,
+				.hasPerlin = perlinEnabled ? 1 : 0,
+				.m = m,
+				.camPosition = camPosition
 			}
 		);
 		
@@ -199,29 +287,57 @@ private:
 		);
 	}
 
+	// Generate a grid [0,15]^2 contains random values
+	std::vector<std::vector<float>> GenerateGrid(int size) {
+		std::vector<std::vector<float>> grid(size, std::vector<float>(size));
+
+		for (int i = 0; i < size; i++) {
+			for (int j = 0; j < size; j++) {
+				grid[i][j] = Math::Random(0, 255);
+			}
+		}
+		return grid;
+	}
+
 	void CreateGpuTexture()
 	{
-		auto const path = Path::Instance->Get("models/Flag_of_Canada.png");
+		//auto const path = Path::Instance->Get("models/Flag_of_Canada.png");
+		auto const path = Path::Instance->Get("models/chess_bishop/bishop.colour.white.png");
 		MFA_ASSERT(std::filesystem::exists(path));
 		auto const cpuTexture = Importer::UncompressedImage(path);
 
-		/*int width = 512;
-		int height = 512;
+		// Changed: load ao image
+		auto const aoPath = Path::Instance->Get("models/chess_bishop/bishop.ao.png");
+		MFA_ASSERT(std::filesystem::exists(aoPath));
+		auto const aoCpuTexture = Importer::UncompressedImage(aoPath);
+
+		int width = 16;
+		int height = 16;
 		int components = 4;
+		std::vector<std::vector<float>> grid = GenerateGrid(width);
 		auto const blob = Memory::AllocSize(width * height * components);
 		auto* ptr = blob->As<uint8_t>();
 		for (int i = 0; i < width * height * components; ++i)
 		{
-			ptr[i] = Math::Random(0, 256);
+			ptr[i] = Math::Random(0, 255);
 		}
 
-		auto cpuTexture = Importer::InMemoryTexture(
-			*blob, 
-			width, 
-			height, 
+		for (int y = 0; y < 16; y++) {
+			for (int x = 0; x < 16; x++) {
+				ptr[y * 4 * 16 + x * 4] = grid[y][x]; 	  //R
+				ptr[y * 4 * 16 + x * 4 + 1] = grid[y][x]; //G
+				ptr[y * 4 * 16 + x * 4 + 2] = grid[y][x]; //B
+				ptr[y * 4 * 16 + x * 4 + 3] = 255;
+			}
+		}
+
+		auto proCpuTexture = Importer::InMemoryTexture(
+			*blob,
+			width,
+			height,
 			Asset::Texture::Format::UNCOMPRESSED_UNORM_R8G8B8A8_LINEAR,
 			components
-		);*/
+		);
 
 		auto const* device = LogicalDevice::Instance;
 		auto const commandBuffer = RB::BeginSingleTimeCommand(
@@ -236,7 +352,25 @@ private:
 			commandBuffer
 		);
 
+		// Changed: create ao texture 
+		auto [aoTexture, aoStagingBuffer] = RB::CreateTexture(
+			*aoCpuTexture,
+			LogicalDevice::Instance->GetVkDevice(),
+			LogicalDevice::Instance->GetPhysicalDevice(),
+			commandBuffer
+		);
+
+		// Changed: create procedural texture from random grid 
+		auto [proTexture, proStagingBuffer] = RB::CreateTexture(
+			*proCpuTexture,
+			LogicalDevice::Instance->GetVkDevice(),
+			LogicalDevice::Instance->GetPhysicalDevice(),
+			commandBuffer
+		);
+
 		_texture = texture;
+		_aoTexture = aoTexture; // Changed
+		_proTexture = proTexture;
 
 		RB::EndAndSubmitSingleTimeCommand(
 			device->GetVkDevice(),
@@ -293,9 +427,10 @@ private:
 		);
 	}
 
+	// Changed
 	void CreateDescriptorSet()
 	{
-		_perGeometryDescriptorSet = _pipeline->CreatePerGeometryDescriptorSetGroup(*_material->buffers[0], *_texture);
+		_perGeometryDescriptorSet = _pipeline->CreatePerGeometryDescriptorSetGroup(*_material->buffers[0], *_texture, *_aoTexture, *_proTexture);		// pass aoTexture to descriptorSet
 	}
 
 	std::shared_ptr<PointRenderer> _pointRenderer{};
@@ -312,10 +447,42 @@ private:
 	std::shared_ptr<RT::BufferAndMemory> _vertexBuffer{};
 
 	std::shared_ptr<RT::GpuTexture> _texture{};
+	std::shared_ptr<RT::GpuTexture> _aoTexture{};
+	std::shared_ptr<RT::GpuTexture> _proTexture{};
 	std::shared_ptr<RT::BufferGroup> _material{};
 	
 	RT::DescriptorSetGroup _perGeometryDescriptorSet;
 };
+
+void CalculateBoundingBox(Importer::ObjModel& objModel) {
+	glm::vec3 minBound = objModel.vertices[0].position;
+	glm::vec3 maxBound = objModel.vertices[0].position;
+
+	for (int i = 0; i < objModel.vertices.size(); i++) {
+		minBound = glm::min(minBound, objModel.vertices[i].position);
+		maxBound = glm::max(maxBound, objModel.vertices[i].position);
+	}
+
+	glm::vec3 offset = (minBound + maxBound) / 2.0f;
+
+	//Calculate size of the bounding box
+	glm::vec3 boundingBoxSize = maxBound - minBound;
+
+	// Determine the maximum dimension of the bounding box
+	float maxDimension = glm::compMax(boundingBoxSize);
+
+	//Calculate the scaling factor for uniform scaling
+	float scaleFactor = 2.0f / maxDimension;
+
+	for (int i = 0; i < objModel.vertices.size(); i++) {
+		objModel.vertices[i].position.x -= offset.x;
+		objModel.vertices[i].position.y -= offset.y;
+		objModel.vertices[i].position.z -= offset.z;
+
+		objModel.vertices[i].position *= scaleFactor;
+	}
+}
+
 
 std::shared_ptr<FlagMesh> GenerateFlag(
 	std::shared_ptr<FlatShadingPipeline> const& pipeline,
@@ -335,6 +502,9 @@ std::shared_ptr<FlagMesh> GenerateFlag(
 	{
 		triangles.emplace_back(std::tuple{ objModel.indices[i], objModel.indices[i + 1], objModel.indices[i + 2] });
 	}
+
+	CalculateBoundingBox(objModel);		// calculate bounding box to center obj 
+
 	for (auto & vertex : objModel.vertices)
 	{
 		vertices.emplace_back(vertex.position);
@@ -378,7 +548,7 @@ std::shared_ptr<FlagMesh> GenerateFlag(
 	return std::make_shared<FlagMesh>(
 		pipeline,
 		wireframePipeline,
-		glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f },
+		glm::vec4{ 1.0f, 1.0f, 1.0f, 1.0f },
 		vertices,
 		triangles,
 		uvs,
@@ -424,7 +594,7 @@ int main()
 			device->GetMaxFramePerFlight()
 		);
 
-		ObserverCamera camera{};
+		ArcballCamera camera{};
 		camera.Setposition({ 0.0f, 0.0f, 5.0f });
 
 		auto ComputeViewProjectionMat4 = [&camera]()->glm::mat4
@@ -516,6 +686,7 @@ int main()
 
 				displayRenderPass->Begin(recordState);
 
+				camPosition = camera.Getposition();
 				flagMesh->Render(recordState);
 				ui->Render(recordState, deltaTimeSec);
 

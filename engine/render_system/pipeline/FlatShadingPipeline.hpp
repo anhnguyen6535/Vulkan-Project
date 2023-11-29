@@ -26,6 +26,11 @@ namespace MFA
         struct PushConstants
         {
             glm::mat4 model;
+            int hasBaseColor;
+            int hasAo;
+            int hasPerlin;
+            int m;
+            glm::vec3 camPosition;
         };
 
         struct Material
@@ -69,7 +74,9 @@ namespace MFA
         [[nodiscard]]
         RT::DescriptorSetGroup CreatePerGeometryDescriptorSetGroup(
             RT::BufferAndMemory const& material,
-            RT::GpuTexture const& texture
+            RT::GpuTexture const& texture,
+            RT::GpuTexture const& aoTexture,
+            RT::GpuTexture const& proTexture
         ) const;
 
     private:
