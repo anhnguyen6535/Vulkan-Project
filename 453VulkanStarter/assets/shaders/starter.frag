@@ -29,11 +29,12 @@ struct Sphere
     vec3 position;
     float scale;
     int textureIndex;
+    float orbitPeriod;
+    float orbitRadius;
 };
 
 
 void main() {
-
     vec2 scaledCoords = (vec2(p.x, p.y)) * 50;
     color = texture(textures[0], scaledCoords);
     float eAxial = -pc.time;
@@ -43,12 +44,20 @@ void main() {
     Sphere spheres[MAX_SPHERES];
     
     // Sun
-    spheres[0] = Sphere(vec3(0.0, 0.0, 0.0), 0.5, 1);
+    spheres[0] = Sphere(vec3(0.0, 0.0, 0.0), 0.5, 1, 0, 0);
     // Earth
-    spheres[1] = Sphere(vec3(2.5, 0.0, 0.0), 0.2, 2);
+    spheres[1] = Sphere(vec3(2.5, 0.0, 0.0), 0.2, 2, 365, 2.5);
     // Moon
-    spheres[2] = Sphere(vec3(3, 0.0, 0.0), 0.1, 3);
+    spheres[2] = Sphere(vec3(3.0, 0.0, 0.0), 0.1, 3, 27, 0.5);
 
+    // Calculate the position of Earth and Moon in its circular orbit 
+    for(int i = 1; i < MAX_SPHERES; i++){
+        float orbitSpeed = 2.0 * PI / spheres[i].orbitPeriod; 
+        float orbitAngle = pc.time * orbitSpeed;
+        vec3 orbitPosition = vec3(sin(orbitAngle), 0.0, cos(orbitAngle)) * spheres[i].orbitRadius;
+
+        spheres[i].position = spheres[i-1].position + orbitPosition;;
+    }
 
     // Sort spheres based on distance from the camera
     for (int i = 0; i < MAX_SPHERES - 1; ++i) {
