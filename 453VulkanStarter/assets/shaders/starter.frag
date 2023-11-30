@@ -37,7 +37,7 @@ void main() {
     vec2 scaledCoords = (vec2(p.x, p.y)) * 50;
     color = texture(textures[0], scaledCoords);
     float eAxial = -pc.time / 2;
-    float sAxial = -pc.time / 25;
+    float sAxial = -pc.time / 27;
     float mAxial = -pc.time / 27;
 
     Sphere spheres[MAX_SPHERES];
@@ -111,6 +111,7 @@ void main() {
                     theta = atan(normal.y, normal.x);
                 }
 
+                // find axial angle 
                 float angle;
                 if(i == 0){
                     angle = sAxial;
