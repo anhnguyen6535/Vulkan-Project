@@ -33,22 +33,22 @@ struct Sphere
 
 
 void main() {
-    
+
     // Scale down the texture coordinates to reduce the size of the background
-    vec2 scaledCoords = (vec2(p.x, p.y)) * 100;
+    vec2 scaledCoords = (vec2(p.x, p.y)) * 50;
     // Use texture for background instead of a static color
     color = texture(textures[0], scaledCoords);
 
     Sphere spheres[MAX_SPHERES];
     
     // Sphere 1 (center)
-    spheres[0] = Sphere(vec3(0.0, 0.0, 0.0), 0.3, 1);
+    spheres[0] = Sphere(vec3(0.0, 0.0, 0.0), 0.5, 1);
 
     // Sphere 2 (earth)
-    spheres[1] = Sphere(vec3(2.0, 0.0, 0.0), 0.15, 2);
+    spheres[1] = Sphere(vec3(2.5, 0.0, 0.0), 0.2, 2);
 
     // Sphere 3 (moon)
-    spheres[2] = Sphere(vec3(2.4, 0.0, 0.0), 0.09, 3);
+    spheres[2] = Sphere(vec3(3, 0.0, 0.0), 0.1, 3);
 
 
     // Sort spheres based on distance from the camera

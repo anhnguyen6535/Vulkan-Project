@@ -21,7 +21,7 @@ void main() {
     float near = pushConstants.proj.x;
     float far = pushConstants.proj.y; 
     float aspect = pushConstants.proj.z;
-    float fov = radians(0.5*pushConstants.proj.w);
+    float fov = radians(1*pushConstants.proj.w);
     
     // position and direction of ray in world space for ray tracing
     // flip y for Vulkan
