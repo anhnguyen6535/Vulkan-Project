@@ -36,7 +36,7 @@ void main() {
 
     vec2 scaledCoords = (vec2(p.x, p.y)) * 50;
     color = texture(textures[0], scaledCoords);
-    float eAxial = -pc.time / 2;
+    float eAxial = -pc.time;
     float sAxial = -pc.time / 27;
     float mAxial = -pc.time / 27;
 
@@ -120,7 +120,7 @@ void main() {
                 }else{
                     angle = mAxial;
                 }
-                theta += angle;
+                theta += angle * 0.5;
 
                 // Adjust texture coordinates based on sphere's position and scale
                 vec2 sphereCoords = vec2(1.0 + 0.5 * theta / PI, phi / PI);
