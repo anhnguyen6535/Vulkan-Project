@@ -2,6 +2,7 @@
 
 #define PI 3.1415926535897932384626433832795
 #define MAX_TEXTURES 4		// save some space in the push constants by hard-wiring this
+#define MAX_SPHERES 3       // Sun, Moon, and Earth
 
 layout(location = 0) out vec4 color;
 
@@ -20,73 +21,101 @@ layout( push_constant ) uniform constants
 
 layout(binding = 0) uniform sampler2D textures[ MAX_TEXTURES ];
 
-// Material properties
-vec3 bg_color = vec3(0.00,0.00,0.05);
-float offsetDistances[MAX_TEXTURES-1] = {0.0, 1.0, 2.0};
-float scaleFactors[MAX_TEXTURES] = {0.5, 0.7, 0.8, 1.0};
+// Material properties (temp remove)
+// vec3 bg_color = vec3(0.00,0.00,0.05);
 
-void checkIntersections(int index){
-    vec3 p2 = p + vec3(offsetDistances[index-1], 0, 0);
-    vec3 dir = normalize(d);
-    float prod = 2.0 * dot(p2,dir);
-    float normp = length(p2);
-    float discriminant = prod*prod -4.0*(-1.0 + normp*normp);
-    color = vec4(bg_color, 1.0);
+struct Sphere
+{
+    vec3 position;
+    float scale;
+    int textureIndex;
+};
 
-    if( discriminant >= 0.0) {
-    // determine intersection point
-    float t1 = 0.5 * (-prod - sqrt(discriminant));
-    float t2 = 0.5 * (-prod + sqrt(discriminant));
-    float tmin, tmax;
-    float t;
-    if(t1 < t2) {
-        tmin = t1;
-        tmax = t2;
-    } else {
-        tmin = t2;
-        tmax = t1;
-    }
-
-    if(tmax > 0.0) {
-        t = (tmin > 0) ? tmin : tmax;
-        vec3 ipoint = p2 + t*(dir);
-
-        vec3 normal = normalize(ipoint);
-
-       
-            
-        // determine texture coordinates in spherical coordinates
-            
-        // First rotate about x through 90 degrees so that y is up.
-        normal.z = -normal.z;
-        normal = normal.xzy;
-
-        float phi = acos(normal.z);
-        float theta;
-        if(abs(normal.x) < 0.001) {
-            theta = sign(normal.y)*PI*0.5; 
-        } else {
-            theta = atan(normal.y, normal.x); 
-        }
-
-        // Offset the entire texture by adding the xOffset and yOffset
-        // add vec2 to textureCoordinate for rotate
-        vec2 textureCoordinates = vec2(1.0 + 0.5 * theta / PI, phi / PI);
-        // normalize coordinates for texture sampling. 
-        // Top-left of texture is (0,0) in Vulkan, so we can stick to spherical coordinates
-            color = texture(textures[index], 
-	                textureCoordinates);
-    }}
-    else{
-        color = texture(textures[0], 
-		vec2(0.5,0.5));
-    }
-}
 
 void main() {
     
-    // intersect against sphere of radius 1 centered at the origin
-    checkIntersections(1);
-    checkIntersections(2);
-    checkIntersections(3);
+    // Scale down the texture coordinates to reduce the size of the background
+    vec2 scaledCoords = (vec2(p.x, p.y)) * 100;
+    // Use texture for background instead of a static color
+    color = texture(textures[0], scaledCoords);
+
+    Sphere spheres[MAX_SPHERES];
+    
+    // Sphere 1 (center)
+    spheres[0] = Sphere(vec3(0.0, 0.0, 0.0), 0.3, 1);
+
+    // Sphere 2 (earth)
+    spheres[1] = Sphere(vec3(2.0, 0.0, 0.0), 0.15, 2);
+
+    // Sphere 3 (moon)
+    spheres[2] = Sphere(vec3(2.4, 0.0, 0.0), 0.09, 3);
+
+
+    // Sort spheres based on distance from the camera
+    for (int i = 0; i < MAX_SPHERES - 1; ++i) {
+        for (int j = i + 1; j < MAX_SPHERES; ++j) {
+            float distanceI = length(p - spheres[i].position);
+            float distanceJ = length(p - spheres[j].position);
+            if (distanceI < distanceJ) {
+                Sphere temp = spheres[i];
+                spheres[i] = spheres[j];
+                spheres[j] = temp;
+            }
+        }
+    }
+
+    // Intersect against spheres
+    for (int i = 0; i < MAX_SPHERES; ++i)
+    {
+        vec3 dir = normalize(d);
+        vec3 p2 = (p - spheres[i].position);
+
+        float a = dot(dir, dir);
+        float prod = 2.0 * dot(p2, dir);
+//        float normp = length(p2);
+        float c = dot(p2, p2) - spheres[i].scale * spheres[i].scale;
+
+        float discriminant = prod * prod - 4.0 * a * c;
+//        float discriminant = prod * prod - 4.0 * (-1.0 + normp * normp);
+
+        if (discriminant >= 0.0)
+        {
+            // Determine intersection point
+            float t1 = 0.5 * (-prod - sqrt(discriminant)) / a;
+            float t2 = 0.5 * (-prod + sqrt(discriminant)) / a;
+
+            float t;
+            float tmin = min(t1, t2);
+            float tmax = max(t1, t2);
+
+            if (tmax > 0.0)
+            {
+                t = (tmin > 0) ? tmin : tmax;
+                vec3 ipoint = p + t * (dir);
+                vec3 normal = normalize(ipoint - spheres[i].position) ;
+
+                // Determine texture coordinates in spherical coordinates
+
+                // First rotate about x through 90 degrees so that y is up.
+                normal.z = -normal.z;
+                normal = normal.xzy;
+
+                float phi = acos(normal.z);
+                float theta;
+                if (abs(normal.x) < 0.001)
+                {
+                    theta = sign(normal.y) * PI * 0.5;
+                }
+                else
+                {
+                    theta = atan(normal.y, normal.x);
+                }
+                // Accumulate colors from each sphere
+                // Adjust texture coordinates based on sphere's position and scale
+                vec2 sphereCoords = vec2(1.0 + 0.5 * theta / PI, phi / PI);
+
+                color = texture(textures[spheres[i].textureIndex], sphereCoords);
+            }
+        }
+    }
 }
