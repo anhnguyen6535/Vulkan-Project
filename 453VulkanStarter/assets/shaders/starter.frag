@@ -34,20 +34,16 @@ struct Sphere
 
 void main() {
 
-    // Scale down the texture coordinates to reduce the size of the background
     vec2 scaledCoords = (vec2(p.x, p.y)) * 50;
-    // Use texture for background instead of a static color
     color = texture(textures[0], scaledCoords);
 
     Sphere spheres[MAX_SPHERES];
     
-    // Sphere 1 (center)
+    // Sun
     spheres[0] = Sphere(vec3(0.0, 0.0, 0.0), 0.5, 1);
-
-    // Sphere 2 (earth)
+    // Earth
     spheres[1] = Sphere(vec3(2.5, 0.0, 0.0), 0.2, 2);
-
-    // Sphere 3 (moon)
+    // Moon
     spheres[2] = Sphere(vec3(3, 0.0, 0.0), 0.1, 3);
 
 
@@ -110,7 +106,7 @@ void main() {
                 {
                     theta = atan(normal.y, normal.x);
                 }
-                // Accumulate colors from each sphere
+
                 // Adjust texture coordinates based on sphere's position and scale
                 vec2 sphereCoords = vec2(1.0 + 0.5 * theta / PI, phi / PI);
 
