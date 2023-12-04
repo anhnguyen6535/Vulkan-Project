@@ -37,7 +37,7 @@ struct Sphere
 vec3 getNorm(vec3 sphereCenter, float sphereRadius, vec3 point){
     vec3 norm = normalize(point - sphereCenter);
 
-//    norm /= sphereRadius;
+    norm /= sphereRadius;
     return norm;
 }
 
@@ -45,8 +45,10 @@ void main() {
     
     float amStrength = 0.05f;
     float difStrength = 0.5f;
-    vec3 specIntensity = vec3(0.2f, 0.2f, 0.2f);
-    float spec_pow = pow(2, 2);
+    float specRate = 0.001f;
+    vec3 specIntensity = vec3(specRate, specRate, specRate);
+    float spec_pow = pow(2, 0.01);
+//    float spec_pow = pow(2, 2);   // on point
     vec3 lightCol = vec3(1.0f, 0.8f, 0.6f);  // Sun-like light color
 
 
