@@ -75,8 +75,38 @@ void main() {
         float orbitSpeed = 2.0 * PI / spheres[i].orbitPeriod; 
         float orbitAngle = pc.time * orbitSpeed;
         vec3 orbitPosition = vec3(sin(orbitAngle), 0.0, cos(orbitAngle)) * spheres[i].orbitRadius;
+//
+//        spheres[i].position = spheres[i-1].position + orbitPosition;;
 
-        spheres[i].position = spheres[i-1].position + orbitPosition;;
+        // Apply axial tilt to Earth
+        if(i == 1){
+            float axialTilt = radians(23.44);  // Earth's axial tilt in degrees
+            mat3 earthAxialRotation = mat3(cos(axialTilt), -sin(axialTilt), 0.0,
+                                           sin(axialTilt), cos(axialTilt), 0.0,
+                                           0.0, 0.0, 1.0);
+            spheres[i].position = spheres[i-1].position + orbitPosition;
+//            spheres[i].position = earthAxialRotation * earthOrbitPosition;
+        }
+        else{
+            // For Moon, apply both orbital and axial tilts
+            float lunarOrbitTilt = radians(5.14);  // Lunar orbital tilt in degrees
+            float lunarAxialTilt = radians(6.68);  // Lunar axial tilt in degrees
+//            mat3 moonOrbitalRotation = mat3(cos(lunarOrbitTilt), -sin(lunarOrbitTilt), 0.0,
+//                                             sin(lunarOrbitTilt), cos(lunarOrbitTilt), 0.0,
+//                                             0.0, 0.0, 1.0);
+//            mat3 moonAxialRotation = mat3(1.0, 0.0, 0.0,
+//                                           0.0, cos(lunarAxialTilt), -sin(lunarAxialTilt),
+//                                           0.0, sin(lunarAxialTilt), cos(lunarAxialTilt));
+//            spheres[i].position = moonAxialRotation * moonOrbitalRotation * moonOrbitPosition;
+
+            // inclination
+            float moonX = orbitPosition.x * cos(lunarOrbitTilt) - orbitPosition.y * sin(lunarOrbitTilt);
+            float moonY = orbitPosition.x * sin(lunarOrbitTilt) + orbitPosition.y * cos(lunarOrbitTilt);
+            orbitPosition.x = moonX;
+            orbitPosition.y = moonY;
+
+            spheres[i].position = spheres[i-1].position + orbitPosition;
+        }
     }
 
     // Sort spheres based on distance from the camera
