@@ -149,10 +149,6 @@ void main() {
                     theta = atan(normal.y, normal.x);
                 }
 
-                // Axial tilt angle for Earth (around z-axis)
-//                float axialTilt = radians(23.44); // Earth's axial tilt in degrees
-//                theta += axialTilt;
-
                 // find axial angle 
                 float angle = -pc.time / spheres[i].axialSpeed;
 
