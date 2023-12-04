@@ -31,6 +31,7 @@ struct Sphere
     int textureIndex;
     float orbitPeriod;
     float orbitRadius;
+    float axialSpeed;
 };
 
 
@@ -44,11 +45,11 @@ void main() {
     Sphere spheres[MAX_SPHERES];
     
     // Sun
-    spheres[0] = Sphere(vec3(0.0, 0.0, 0.0), 0.5, 1, 0, 0);
+    spheres[0] = Sphere(vec3(0.0, 0.0, 0.0), 0.5, 1, 0, 0, 270);
     // Earth
-    spheres[1] = Sphere(vec3(2.5, 0.0, 0.0), 0.2, 2, 365, 2.5);
+    spheres[1] = Sphere(vec3(2.5, 0.0, 0.0), 0.2, 2, 365, 2.5, 10);
     // Moon
-    spheres[2] = Sphere(vec3(3.0, 0.0, 0.0), 0.1, 3, 27, 0.5);
+    spheres[2] = Sphere(vec3(3.0, 0.0, 0.0), 0.1, 3, 27, 0.5, 270);
 
     // Calculate the position of Earth and Moon in its circular orbit 
     for(int i = 1; i < MAX_SPHERES; i++){
@@ -121,18 +122,10 @@ void main() {
                 }
 
                 // find axial angle 
-                float angle;
-                if(i == 0){
-                    angle = sAxial;
-                }else if(i==1){
-                    angle = eAxial;
-                }else{
-                    angle = mAxial;
-                }
-                theta += angle * 0.5;
+                float angle = -pc.time / spheres[i].axialSpeed;
 
                 // Adjust texture coordinates based on sphere's position and scale
-                vec2 sphereCoords = vec2(1.0 + 0.5 * theta / PI, phi / PI);
+                vec2 sphereCoords = vec2(angle + 0.5 * theta / PI, phi / PI);
 
                 color = texture(textures[spheres[i].textureIndex], sphereCoords);
             }
