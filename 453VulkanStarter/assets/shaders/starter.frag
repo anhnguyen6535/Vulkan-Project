@@ -26,7 +26,6 @@ layout(binding = 0) uniform sampler2D textures[ MAX_TEXTURES ];
 
 struct Sphere
 {
-    int id;
     vec3 position;
     float scale;
     int textureIndex;
@@ -57,11 +56,11 @@ void main() {
     Sphere spheres[MAX_SPHERES];
     
     // Sun
-    spheres[0] = Sphere(0, vec3(0.0, 0.0, 0.0), 0.5, 1, 0, 0, 270);
+    spheres[0] = Sphere(vec3(0.0, 0.0, 0.0), 0.5, 1, 0, 0, 270);
     // Earth
-    spheres[1] = Sphere(1, vec3(2.5, 0.0, 0.0), 0.2, 2, 365, 2.5, 10);
+    spheres[1] = Sphere(vec3(2.5, 0.0, 0.0), 0.2, 2, 365, 2.5, 10);
     // Moon
-    spheres[2] = Sphere(2, vec3(3.0, 0.0, 0.0), 0.1, 3, 27, 0.5, 270);
+    spheres[2] = Sphere(vec3(3.0, 0.0, 0.0), 0.1, 3, 27, 0.5, 270);
 
     // Calculate the position of Earth and Moon in its circular orbit 
     for(int i = 1; i < MAX_SPHERES; i++){
@@ -143,7 +142,7 @@ void main() {
 
                 //***** LIGHT ******//
 
-                if(spheres[i].id != 0){
+                if(spheres[i].textureIndex != 1){
                     vec3 lightPosition = vec3(0.0f, 0.0f, 0.0f);
                     vec3 lightDir = normalize(lightPosition - spheres[i].position);
 
