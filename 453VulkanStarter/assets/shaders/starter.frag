@@ -26,6 +26,7 @@ layout(binding = 0) uniform sampler2D textures[ MAX_TEXTURES ];
 
 struct Sphere
 {
+    int id;
     vec3 position;
     float scale;
     int textureIndex;
@@ -34,19 +35,32 @@ struct Sphere
     float axialSpeed;
 };
 
+vec3 getNorm(vec3 sphereCenter, float sphereRadius, vec3 point){
+    vec3 norm = normalize(point - sphereCenter);
+
+    norm /= sphereRadius;
+    return norm;
+}
 
 void main() {
+    
+    float amStrength = 0.05f;
+    float difStrength = 0.1f;
+    vec3 specIntensity = vec3(0.2f, 0.2f, 0.2f);
+    float spec_pow = pow(2, 10);
+    vec3 lightCol = vec3(1.0f, 1.0f, 1.0f);  // White light color
+
     vec2 scaledCoords = (vec2(p.x, p.y)) * 50;
     color = texture(textures[0], scaledCoords);
 
     Sphere spheres[MAX_SPHERES];
     
     // Sun
-    spheres[0] = Sphere(vec3(0.0, 0.0, 0.0), 0.5, 1, 0, 0, 270);
+    spheres[0] = Sphere(0, vec3(0.0, 0.0, 0.0), 0.5, 1, 0, 0, 270);
     // Earth
-    spheres[1] = Sphere(vec3(2.5, 0.0, 0.0), 0.2, 2, 365, 2.5, 10);
+    spheres[1] = Sphere(1, vec3(2.5, 0.0, 0.0), 0.2, 2, 365, 2.5, 10);
     // Moon
-    spheres[2] = Sphere(vec3(3.0, 0.0, 0.0), 0.1, 3, 27, 0.5, 270);
+    spheres[2] = Sphere(2, vec3(3.0, 0.0, 0.0), 0.1, 3, 27, 0.5, 270);
 
     // Calculate the position of Earth and Moon in its circular orbit 
     for(int i = 1; i < MAX_SPHERES; i++){
@@ -125,6 +139,43 @@ void main() {
                 vec2 sphereCoords = vec2(angle + 0.5 * theta / PI, phi / PI);
 
                 color = texture(textures[spheres[i].textureIndex], sphereCoords);
+
+                //***** LIGHT ******//
+
+                if(spheres[i].id != 0){
+                    vec3 lightPosition = vec3(0.0f, 0.0f, 0.0f);
+                    vec3 lightDir = normalize(lightPosition - spheres[i].position);
+
+                    // spec //
+                    vec3 viewDir = normalize(spheres[i].position - p);      // view direction
+                    vec3 worldDir = getNorm(spheres[i].position, spheres[i].scale-0.1, ipoint);   // normal
+
+                    vec3 perfectReflect = reflect(lightDir, worldDir);   // perfectly reflection direction
+
+                    float angleIn = dot(worldDir, lightDir);
+                    float angleOut = dot(viewDir, perfectReflect);
+
+                    if (angleIn < 0) {
+                        angleIn = 0.0f;
+                        angleOut = 0.0f;
+                    }
+                    if (angleOut < 0) {
+                        angleOut = 0.0f;
+                    }
+                    vec3 spec = pow(angleOut, spec_pow) * specIntensity;
+
+                    // diffuse //
+                    float difDot = max(0.0, dot(normal, lightDir));
+                    vec3 diffuse = difDot * color.xyz * difStrength;
+
+                    // ambient //
+                    vec3 ambient = amStrength * color.xyz;
+
+                    color = vec4((diffuse + ambient + spec) * lightCol, 1 );
+//                    color = clamp(vec4((diffuse + ambient + spec) * lightCol, 1), 0.0, 1.0);
+
+                }
+
             }
         }
     }
