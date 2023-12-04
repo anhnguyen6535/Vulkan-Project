@@ -38,17 +38,18 @@ struct Sphere
 vec3 getNorm(vec3 sphereCenter, float sphereRadius, vec3 point){
     vec3 norm = normalize(point - sphereCenter);
 
-    norm /= sphereRadius;
+//    norm /= sphereRadius;
     return norm;
 }
 
 void main() {
     
     float amStrength = 0.05f;
-    float difStrength = 0.1f;
+    float difStrength = 0.5f;
     vec3 specIntensity = vec3(0.2f, 0.2f, 0.2f);
-    float spec_pow = pow(2, 10);
-    vec3 lightCol = vec3(1.0f, 1.0f, 1.0f);  // White light color
+    float spec_pow = pow(2, 2);
+    vec3 lightCol = vec3(1.0f, 0.8f, 0.6f);  // Sun-like light color
+
 
     vec2 scaledCoords = (vec2(p.x, p.y)) * 50;
     color = texture(textures[0], scaledCoords);
@@ -148,7 +149,7 @@ void main() {
 
                     // spec //
                     vec3 viewDir = normalize(spheres[i].position - p);      // view direction
-                    vec3 worldDir = getNorm(spheres[i].position, spheres[i].scale-0.1, ipoint);   // normal
+                    vec3 worldDir = getNorm(spheres[i].position, spheres[i].scale, ipoint);   // normal
 
                     vec3 perfectReflect = reflect(lightDir, worldDir);   // perfectly reflection direction
 
@@ -166,14 +167,12 @@ void main() {
 
                     // diffuse //
                     float difDot = max(0.0, dot(normal, lightDir));
-                    vec3 diffuse = difDot * color.xyz * difStrength;
+                    vec3 diffuse = angleIn * color.xyz * difStrength;
 
                     // ambient //
                     vec3 ambient = amStrength * color.xyz;
 
                     color = vec4((diffuse + ambient + spec) * lightCol, 1 );
-//                    color = clamp(vec4((diffuse + ambient + spec) * lightCol, 1), 0.0, 1.0);
-
                 }
 
             }
