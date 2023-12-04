@@ -44,3 +44,6 @@ Use left arrow to rotate and orbit backward
 
 ### Requirement 3: 
 - Light source from sun, only add shading if spheres.textureIndex != 0 which are sun and moon
+
+### Bonus 2:
+- I only implement Moon inclination [line 80 - 89]
