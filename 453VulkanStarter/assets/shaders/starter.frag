@@ -38,9 +38,6 @@ struct Sphere
 void main() {
     vec2 scaledCoords = (vec2(p.x, p.y)) * 50;
     color = texture(textures[0], scaledCoords);
-    float eAxial = -pc.time;
-    float sAxial = -pc.time / 27;
-    float mAxial = -pc.time / 27;
 
     Sphere spheres[MAX_SPHERES];
     
