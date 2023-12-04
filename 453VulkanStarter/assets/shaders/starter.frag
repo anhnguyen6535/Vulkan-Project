@@ -44,8 +44,8 @@ vec3 getNorm(vec3 sphereCenter, float sphereRadius, vec3 point){
 
 void main() {
     
-    float amStrength = 0.05f;
-    float difStrength = 0.7f;
+    float amStrength = 0.005f;
+    float difStrength = 1.0f;
 
     // ---- BLEND SPEC ----- //
 //    float specRate = 0.001f;
@@ -72,41 +72,20 @@ void main() {
 
     // Calculate the position of Earth and Moon in its circular orbit 
     for(int i = 1; i < MAX_SPHERES; i++){
-        float orbitSpeed = 2.0 * PI / spheres[i].orbitPeriod; 
+        float orbitSpeed = 2.0 * PI / (spheres[i].orbitPeriod * 2); 
         float orbitAngle = pc.time * orbitSpeed;
         vec3 orbitPosition = vec3(sin(orbitAngle), 0.0, cos(orbitAngle)) * spheres[i].orbitRadius;
-//
-//        spheres[i].position = spheres[i-1].position + orbitPosition;;
 
-        // Apply axial tilt to Earth
-        if(i == 1){
-            float axialTilt = radians(23.44);  // Earth's axial tilt in degrees
-            mat3 earthAxialRotation = mat3(cos(axialTilt), -sin(axialTilt), 0.0,
-                                           sin(axialTilt), cos(axialTilt), 0.0,
-                                           0.0, 0.0, 1.0);
-            spheres[i].position = spheres[i-1].position + orbitPosition;
-//            spheres[i].position = earthAxialRotation * earthOrbitPosition;
-        }
-        else{
-            // For Moon, apply both orbital and axial tilts
-            float lunarOrbitTilt = radians(5.14);  // Lunar orbital tilt in degrees
-            float lunarAxialTilt = radians(6.68);  // Lunar axial tilt in degrees
-//            mat3 moonOrbitalRotation = mat3(cos(lunarOrbitTilt), -sin(lunarOrbitTilt), 0.0,
-//                                             sin(lunarOrbitTilt), cos(lunarOrbitTilt), 0.0,
-//                                             0.0, 0.0, 1.0);
-//            mat3 moonAxialRotation = mat3(1.0, 0.0, 0.0,
-//                                           0.0, cos(lunarAxialTilt), -sin(lunarAxialTilt),
-//                                           0.0, sin(lunarAxialTilt), cos(lunarAxialTilt));
-//            spheres[i].position = moonAxialRotation * moonOrbitalRotation * moonOrbitPosition;
-
-            // inclination
-            float moonX = orbitPosition.x * cos(lunarOrbitTilt) - orbitPosition.y * sin(lunarOrbitTilt);
-            float moonY = orbitPosition.x * sin(lunarOrbitTilt) + orbitPosition.y * cos(lunarOrbitTilt);
+        // Apply inclination to Moon
+        if(i == 2){
+            float inclination = radians(5.14);  // Lunar orbital tilt in degrees
+            float moonX = orbitPosition.x * cos(inclination) - orbitPosition.y * sin(inclination);
+            float moonY = orbitPosition.x * sin(inclination) + orbitPosition.y * cos(inclination);
             orbitPosition.x = moonX;
             orbitPosition.y = moonY;
 
-            spheres[i].position = spheres[i-1].position + orbitPosition;
         }
+        spheres[i].position = spheres[i-1].position + orbitPosition;
     }
 
     // Sort spheres based on distance from the camera
@@ -169,6 +148,10 @@ void main() {
                 {
                     theta = atan(normal.y, normal.x);
                 }
+
+                // Axial tilt angle for Earth (around z-axis)
+//                float axialTilt = radians(23.44); // Earth's axial tilt in degrees
+//                theta += axialTilt;
 
                 // find axial angle 
                 float angle = -pc.time / spheres[i].axialSpeed;
